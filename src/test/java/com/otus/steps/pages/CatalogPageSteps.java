@@ -27,12 +27,12 @@ public class CatalogPageSteps {
     public void printCourseInfoByCostStep(String cost) {
         switch (cost) {
             case "дорогом": {
-                System.out.println("%nИнформация о самом дорогом курсе:");
+                System.out.println("Информация о самом дорогом курсе:");
                 catalogPage.printInfoAboutCourseByCondition(true);
                 break;
             }
             case "дешевом": {
-                System.out.println("%nИнформация о самом дешевом курсе:");
+                System.out.println("Информация о самом дешевом курсе:");
                 catalogPage.printInfoAboutCourseByCondition(false);
                 break;
             }

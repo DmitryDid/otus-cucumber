@@ -84,8 +84,8 @@ public class MouseListener implements WebDriverEventListener {
     public void afterClickOn(WebElement element, WebDriver driver) {
         try {
             ((JavascriptExecutor) driver).executeScript("arguments[0].style.border=''", element);
-        } catch (StaleElementReferenceException e) {
-            e.printStackTrace();
+        } catch (StaleElementReferenceException ignored) {
+
         }
     }
 

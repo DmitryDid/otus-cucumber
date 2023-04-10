@@ -28,7 +28,7 @@ public abstract class AbsBasePage<T> extends AbsPageObject {
     }
 
     public String getHeader() {
-        return driver.findElement(By.cssSelector("h1")).getText();
+        return standardWaiter.waitElement(By.cssSelector("h1")).getText();
     }
 
     public T complexClick(WebElement element) {

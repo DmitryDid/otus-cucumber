@@ -21,14 +21,14 @@ public class MainPage extends AbsBasePage<MainPage> {
     String agreeButtonLocator = "div[class=\"cookies\"] button";
 
     public MainPage agreeCookies() {
-        standardWaiter.easySleep(300);
-        WebElement target = driver.findElement(By.cssSelector(agreeButtonLocator));
-        complexClick(target);
+        standardWaiter.waitElement(By.cssSelector(agreeButtonLocator))
+                .click();
         return this;
     }
 
     public MainPage clickByMoreCoursesButton() {
-        complexClick(moreCoursesButton);
+        standardWaiter.waitElement(moreCoursesButton)
+                .click();
         return this;
     }
 }

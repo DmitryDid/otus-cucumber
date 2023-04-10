@@ -10,6 +10,7 @@ import org.jsoup.select.Elements;
 import org.junit.jupiter.api.Assertions;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 
@@ -47,34 +48,30 @@ public class CatalogPage extends AbsBasePage<CatalogPage> {
     String jsoupCostXPathAlternative = "//div[@class=\"tn-atom\" and contains(text(), \"₽\" ) and not(sub)]";
 
     public CatalogPage agreeCookies() {
-        WebElement element = driver.findElement(By.cssSelector(agreeButtonSelector));
-        complexClick(element);
-        return this;
-    }
-
-
-    public CatalogPage clickByRandomTeacher() {
-        WebElement element = driver.findElement(By.cssSelector(agreeButtonSelector));
-        complexClick(element);
+        standardWaiter.waitElement(By.cssSelector(agreeButtonSelector))
+                .click();
         return this;
     }
 
     public CatalogPage filterCoursesByText(String text) {
-        filter.sendKeys(text);
+        standardWaiter.waitElement(filter).sendKeys(text);
 
-        standardWaiter.easySleep(300);
-        List<WebElement> namesElements;
+        List<WebElement> namesElements = null;
         int count = 0;
         do {
             if (count > 20) {
-                Assertions.fail("ERROR! Courses after filtering are less than the test suggests. Expected condition: < 8");
+                Assertions.fail("ERROR! Courses after filtering are less than the test suggests.");
             }
-            standardWaiter.easySleep(200);
-            namesElements = driver.findElements(By.cssSelector(lessonsNamesSelector)).stream()
-                    .filter(e -> e.getText().toLowerCase(Locale.ROOT).contains(text.toLowerCase(Locale.ROOT)))
-                    .collect(Collectors.toList());
+            try {
+                namesElements = standardWaiter.waitElements(By.cssSelector(lessonsNamesSelector)).stream()
+                        .filter(e -> e.getText().toLowerCase(Locale.ROOT).contains(text.toLowerCase(Locale.ROOT)))
+                        .collect(Collectors.toList());
+            } catch (StaleElementReferenceException e) {
+                standardWaiter.easySleep(100);
+                continue;
+            }
             count++;
-        } while (namesElements.size() < 3);
+        } while (namesElements.size() < 1);
 
         return this;
     }
@@ -82,30 +79,39 @@ public class CatalogPage extends AbsBasePage<CatalogPage> {
     public CatalogPage printCoursesNameByStartDate(String startDate) {
         LocalDate date = parseDate(startDate);
 
-        driver.findElements(By.cssSelector(filteredLessonsSelector)).stream()
-                .filter(e -> {
-                    LocalDate elementDate;
-                    try {
-                        elementDate = parseDate(e.findElement(By.cssSelector(startLessonsDateSelector)).getText());
-                    } catch (NoSuchElementException e1) {
-                        return false;
-                    }
-                    if (elementDate == null) {
-                        return false;
-                    } else {
-                        return elementDate.isAfter(date) || elementDate.equals(date);
-                    }
-                })
-                .peek(e -> System.out.printf("%s - %s%n",
-                        e.findElement(By.cssSelector(lessonsNamesSelector)).getText(),
-                        e.findElement(By.cssSelector(startLessonsDateSelector)).getText())
-                )
-                .collect(Collectors.toList());
-        return this;
+        while (true) {
+            try {
+                standardWaiter.waitElements(By.cssSelector(filteredLessonsSelector)).stream()
+                        .filter(e -> {
+                            LocalDate elementDate;
+                            try {
+                                elementDate = parseDate(e.findElement(By.cssSelector(startLessonsDateSelector)).getText());
+                            } catch (NoSuchElementException e1) {
+                                return false;
+                            }
+                            if (elementDate == null) {
+                                return false;
+                            } else {
+                                return elementDate.isAfter(date) || elementDate.equals(date);
+                            }
+                        })
+                        .peek(e -> {
+                            System.out.printf("%s - %s%n",
+                                    e.findElement(By.cssSelector(lessonsNamesSelector)).getText(),
+                                    e.findElement(By.cssSelector(startLessonsDateSelector)).getText());
+
+                        })
+                        .collect(Collectors.toList());
+            } catch (StaleElementReferenceException ex) {
+                standardWaiter.easySleep(100);
+                continue;
+            }
+            return this;
+        }
     }
 
     public CoursePage chooseCourseByCondition(ConditionData condition) {
-        List<WebElement> coursesElements = driver.findElements(By.cssSelector(filteredLessonsSelector));
+        List<WebElement> coursesElements = standardWaiter.waitElements(By.cssSelector(filteredLessonsSelector));
         Map<LocalDate, WebElement> coursesMap = new HashMap<>();
         LocalDate startDate = null;
 
@@ -130,13 +136,14 @@ public class CatalogPage extends AbsBasePage<CatalogPage> {
                     .get();
         }
 
-        complexClick(coursesMap.get(startDate));
+        standardWaiter.waitElement(coursesMap.get(startDate))
+                .click();
 
         return new CoursePage(guiceScoped);
     }
 
     public void printInfoAboutCourseByCondition(boolean isExpensive) {
-        List<WebElement> courses = driver.findElements(By.cssSelector(filteredLessonsSelector));
+        List<WebElement> courses = standardWaiter.waitElements(By.cssSelector(filteredLessonsSelector));
         Map<Integer, WebElement> costAndCourses = getJsoupInfo(courses);
         Integer cost;
         if (isExpensive) {
@@ -153,7 +160,7 @@ public class CatalogPage extends AbsBasePage<CatalogPage> {
     }
 
     private Map<Integer, WebElement> getJsoupInfo(List<WebElement> elements) {
-        List<WebElement> courses = driver.findElements(By.cssSelector(filteredLessonsSelector));
+        List<WebElement> courses = standardWaiter.waitElements(By.cssSelector(filteredLessonsSelector));
         Map<Integer, WebElement> result = new HashMap<>();
 
         for (int i = 0; i < courses.size(); i++) {

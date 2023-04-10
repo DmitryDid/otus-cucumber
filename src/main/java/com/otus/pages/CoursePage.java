@@ -27,18 +27,19 @@ public class CoursePage extends AbsBasePage<CoursePage> {
     public CoursePage clickByRandomTeacher() {
         Assertions.assertTrue(teachers.size() > 0);
 
-        complexClick(teachers.get(RANDOM.nextInt(teachers.size() - 1)));
+        standardWaiter.waitElement(teachers.get(RANDOM.nextInt(teachers.size() - 2) + 1))
+                .click();
 
         return this;
     }
 
     public CoursePage agreeCookies() {
-        WebElement element = driver.findElement(By.cssSelector(agreeButtonSelector));
-        complexClick(element);
+        standardWaiter.waitElement(By.cssSelector(agreeButtonSelector))
+                .click();
         return this;
     }
 
     public void printChooseTeacherName() {
-        System.out.println(driver.findElement(By.cssSelector(teacherNameSelector)).getText());
+        System.out.println(standardWaiter.waitElement(By.cssSelector(teacherNameSelector)).getText());
     }
 }

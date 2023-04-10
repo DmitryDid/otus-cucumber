@@ -3,6 +3,7 @@ package com.otus.steps.common;
 import com.google.inject.Inject;
 import com.otus.di.GuiceScoped;
 import com.otus.driver.WebDriverFactory;
+import com.otus.listeners.MouseListener;
 import com.otus.pages.AbsBasePage;
 import io.cucumber.java.ru.Дано;
 import io.cucumber.java.ru.Пусть;
@@ -17,6 +18,7 @@ public class CommonSteps {
     @Дано("Открыт браузер {string}")
     public void openBrowser(String browserName) {
         guiceScoped.driver = new WebDriverFactory().getDriver(browserName);
+        guiceScoped.driver.register(new MouseListener());
     }
 
     @Пусть("Открываем страницу {string}")
